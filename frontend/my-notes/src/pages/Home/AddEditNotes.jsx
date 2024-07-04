@@ -1,19 +1,58 @@
 import React, { useState } from 'react'
 import TagInput from '../../components/Input/TagInput'
 import { MdClose } from 'react-icons/md';
+import axiosInstance from '../../utils/axioslnstance';
 
-const AddEditNotes = ({notData, type, onClose}) => {
-    const [title, setTitle] = useState("");
-    const [content, setContent] = useState("");
-    const[tags, setTags] = useState([]);
+const AddEditNotes = ({notData, type, getAllNotes, onClose, showToastMessage}) => {
+    const [title, setTitle] = useState(notData?.title || "");
+    const [content, setContent] = useState(notData?.content || "");
+    const[tags, setTags] = useState(notData?.tags || []);
 
     const [error, setError] = useState(null);
 
     // Add Note
-    const addNewNote = async () => {};
+    const addNewNote = async () => {
+        try{
+            const response = await axiosInstance.post("/add-note",{
+                title,
+                content,
+                tags,
+            });
+
+            if(response.data && response.data.note){
+                showToastMessage("Note added successfully")
+                getAllNotes();
+                onClose();
+
+            }
+        }catch(error){
+            if(error.response && error.response.data && error.response.data.message){
+                setError(error.response.data.message);}
+        }
+    };
 
     // Edit Note
-    const editNote = async () =>{};
+    const editNote = async () =>{
+        const noteId = notData._id;
+        try{
+            const response = await axiosInstance.put("/edit-note/" + noteId,{
+                title,
+                content,
+                tags,
+            });
+
+            if(response.data && response.data.note){
+                showToastMessage("Note Updated successfully")
+                getAllNotes();
+                onClose();
+
+            }
+        }catch(error){
+            if(error.response && error.response.data && error.response.data.message){
+                setError(error.response.data.message);}
+        }
+        
+    };
     
     const handleAddNote = () => {
         if (!title){
@@ -68,7 +107,7 @@ const AddEditNotes = ({notData, type, onClose}) => {
 
         <button className='btn-primary font-medium mt-5 p-3' 
         onClick={handleAddNote}>
-            ADD
+            {type === "edit" ? "UPDATE":"ADD"}
         </button>
     </div>
   )
